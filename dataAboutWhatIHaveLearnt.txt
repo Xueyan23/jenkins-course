@@ -1,0 +1,69 @@
+STEPS TO INSTALL JENKINS GIVEN IN VIDEO 4 of folder 2) Introduction to jenkins
+step 1- Open terminal and write following command
+cd /var/www/html
+mkdir jenkinsCourse
+cd jenkinsCourse
+git clone https://github.com/Xueyan23/jenkins-course.git
+cd jenkins-course/master/scripts
+sudo bash install_jenkins.sh
+
+
+THIS WILL INSTALL DOCKER AND THEN JENKINS
+
+we install jenkins by running jenkins official container
+
+Step 2 -Now you get the port where jenkins is served BUT tou will open jenkins using url->localhost:8080
+Visit the url of jenkins in frontend
+you will get a path or directory from where you can get initial admin password
+In terminal 
+cat /var/jenkins_home/secrets/initialAdminPassword ->This will give password for initial jenkins authentication
+
+
+EXPLAINATION OF bash commands inside install_jenkins.sh
+
+you can check its details by running->$ cat install_jenkins.sh // When you are in scripts directory
+
+
+#!/bin/bash
+
+# this script is only tested on ubuntu xenial
+
+# install docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+apt-get update
+apt-get install docker-ce docker-ce-cli containerd.io
+systemctl enable docker
+systemctl start docker
+usermod -aG docker ubuntu # agar tumhare paas ubuntu user hai jaise iss instance mein ubuntu user hai toh ye docker ko iss ubuntu group mein add krdega Pr agar aap root hai then you can use docker right away but in linux it's NOT RECOMMENDED not to do things as root So, it's better to use a user
+
+# run jenkins
+mkdir -p /var/jenkins_home # this will create directory
+chown -R 1000:1000 /var/jenkins_home/ #This will change ownership of this jenkins_home directory And 1000:1000 left wala 1000 will be the id under which our jenkins will be running
+docker run -p 8080:8080 -p 50000:50000 -v /var/jenkins_home:/var/jenkins_home -d --name jenkins jenkins/jenkins:lts #Container name - jenkins/jenkins:lts ; This command will start the container which is the official jenkins container that docker will download ;make sure port is exposed  This command -> -v /var/jenkins_home:/var/jenkins_home says that if you are using this container then this /var/jenkins_home will be mapped to /var/jenkins_home directory that you have created 
+
+# show endpoint
+echo 'Jenkins installed'
+echo 'You should now be able to access jenkins at: http://'$(curl -s ifconfig.co)':8080'
+
+COMMAND TO CHECK ALL THE DOCKER IMAGES 
+$sudo docker ps -a
+
+Now if you want to know what I have Done in Tutorial Number Folder 3 video number 3 and 4 refer BuildingFirstDockerApplicationUsingJenkinsUI.txt file inside docker-demo git repository
+
+TUTORIAL Folder-5 Jenkins To DSL Demos for building jenkins job using DSL 
+
+1) Go To Jenkins dashboard->manage plugins->Available plugins->Search Job DSL and install it
+2)Create new project name seed project of  Fresstyle type
+3)Source Code Management->Now enter the url for jenkins-course repository
+4)In Build section->Select Process Job DSLs->Look on Filesystem
+5)Inside DSL Scripts-> job-dsl/nodejs.groovy is the refernce or file location wher DSL code script is written in git repository
+6)SAVE
+7)Run Build for first time will fail because the script needs approval for use
+8)GO to manage jenkins->In-process Script Approval
+9)Approve the incoming script to tell the jenkins that you trust the incoming script from given repository
+10)Now Build the seed project again Its SUCCESS
+
