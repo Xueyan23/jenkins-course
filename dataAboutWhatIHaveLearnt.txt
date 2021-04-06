@@ -184,3 +184,53 @@ type-> pipeline
 5)Under Pipeline section->select Pipeline script from SCM->SCM is git->  copy the url of docker-demo repository
 6)SCript path-> misc/Jenkinsfile
 7)Save-> Build Now
+
+Pipelines Folde VIDEO 6 Demo build, test, and run everything in Docker containers
+JENKINS PIPELINES TEST WITH DOCKER
+IN this we will see how to run a pipeline where the tests will be executed in docker container.
+So remember our Jenkins image is already running in a docker container but if we run any step, it will still run on this jenkins master container and that's what we don't really want.
+We want to run every command in separate isolated container that has some dependencies and binaries bundled with it.
+And those dependencies And Binaries we want to choose ourselves.
+So this is an alternative tousing the tools that are bundled with Kenkins like node.js is bundled so we can use the NPM commands but the alternative here isn't to use a docker container that shapes node to then execute NPM commands.
+CODE WHICH CAN DO THAT->Inside docker-demo repository ->misc->Jenkinsfile.v2
+EXPLAINATION OF CODE
+
+node {  
+   def commit_id
+   stage('Preparation') {
+     checkout scm
+     sh "git rev-parse --short HEAD > .git/commit-id"
+     commit_id = readFile('.git/commit-id').trim()
+   }
+   stage('test') {
+     def myTestContainer = docker.image('node:4.6') #here we say that our test container where we run our test in is going to be a node image version 4.6 We created an image and not used plugin because sometimes the plugin does not come bundled together with all related version feature due to plugin updates so it's better to run the tests in separate isolated containers
+     myTestContainer.pull() #Then I want to make sure that I pulled the latest one if there's a version cached, I want to make sure that Jenkins still goes to docker hub and checks that I have the latest version and it pulls the latest if ther's a newer version.
+     myTestContainer.inside { #And inside this node 4.6 container we are going to execute following bash commands so, nodejs doesn't need to be installed in my jenkins container anymore, I can just create a new container next to my jenkins container and execute these two commands. After these commands are executed the container is just thrown away and then next stage is executed. At anypoint when I want to change my node version, i just change it  def myTestContainer = docker.image('node:4.6') here and other image will be pulled and my install and my tests will be executed using this other container with a newer version. 
+       sh 'npm install --only=dev'
+       sh 'npm test'
+     }
+   }
+   stage('test with a DB') { ###Same two commands are run as previous test stage but I also want next to my node container is also NYSQL container
+
+     def mysql = docker.image('mysql').run("-e MYSQL_ALLOW_EMPTY_PASSWORD=yes --rm") # mysql equals docker image MYSQL. I don't use a tag her as done above for node image which defaults to it will be latest version Mysql image. Then we are going to run this container and will specify an environment variable. MYSQL ALLOW EMPTY password = YES So, ther's no password protection on this MYSQL and this container can be removed --rm after it has been used
+     def myTestContainer = docker.image('node:4.6') 
+     myTestContainer.pull()
+     myTestContainer.inside("--link ${mysql.id}:mysql") { // using linking, mysql will be available at host: mysql, port: 3306 ##Here we pass a parameter which means link this node.js container with this MYSQL container.${mysql.id}:mysql SO these are going to use MYSQL iD and make them tis available as mysql.So we can use node to connect to mysql and put host MYSQL and then you can connect to your MYSQL whenever you are running and executing your tests. Once this stage is finished the container will be thrown away
+#Same two commands are run as previous test stage but I also want next to my node container is also NYSQL container
+          sh 'npm install --only=dev' 
+          sh 'npm test'                     
+     }                                   
+     mysql.stop()
+   }                                     
+   stage('docker build/push') {            
+     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
+       def app = docker.build("wardviaene/docker-nodejs-demo:${commit_id}", '.').push()
+     }                                     
+   }                                       
+}                                          
+ 
+1)Go to jenkins dashboard->new item->name:Pipeline docker nodejs demo run different stages of pipeline in isolated different containers type:pipeline->press OK
+2)Pipeline section->select Pipline script from scm->SCM:git->enter docker-demo repo github url->Script path:misc/Jenkinsfile.v2
+3)Save
+4)Build
+5)DONE
