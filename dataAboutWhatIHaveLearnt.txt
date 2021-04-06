@@ -67,14 +67,60 @@ TUTORIAL Folder-5 Jenkins To DSL Demos for building jenkins job using DSL
 9)Approve the incoming script to tell the jenkins that you trust the incoming script from given repository
 10)Now Build the seed project again Its SUCCESS
 11)Now run the new build project
+12)Now go to ssh your digital ocan machine and get access to it
+13)Now check if it working or not
+14)docker ps
+@)docker exec -it <container Id of jenkins-docker> bash #-it means injective mode
+Entered the jenkins-docker container
+@)cd /var/jenkins_home/workspace/NodeJS example without docker using DSL groovy scripting
+@)ls -ahl
+You will see everything is installed 
+@)npm start
+Command not found
+@) find ~ -name 'npm'
+@) export PATH=$PATH:/var/jenkins_home/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/nodejs/bin #Now whenever we do ls, npm or bash they will also look in this path as well as the regular path a little hack to see if our application is running 
+@)npm start
+
+
 
 TUTORIAL Folder-5 Jenkins To DSL Demos for building jenkins job using DSL and publish in Docker
-1)GO to Jenkins Dashboard->create freestyle project named as NodeJS Docker using DSL groovy scripting
+1)GO to Jenkins Dashboard->Got to already created seed project and configure it
 2)Source Code Management->Now enter the url for jenkins-course repository
 3)In Build section->Select Process Job DSLs->Look on Filesystem
-4)Inside DSL Scripts-> job-dsl/nodejsdocker.groovy is the refernce or file location wher DSL code script is written in git repository
+4)Inside DSL Scripts-> job-dsl/nodejsdocker.groovy is the refernce or file location wher DSL code script is written in git repository this should be added as second line 
 5)Save
 6)Run on first build will fail as DSL script needs approval
 7)GO to manage jenkins->In-process Script Approval
 8)Approve the incoming script to tell the jenkins that you trust the incoming script from given repository
 9)Now Build the project again And it Success And the project is also published in docker
+
+Explaination of GROOVY CODE
+
+job('NodeJS Docker using DSL groovy scripting') { #This will create another job in jenkins with name as given inside parenthesis
+    scm {
+        git('git://github.com/Xueyan23/docker-demo.git') {  node -> // is hudson.plugins.git.GitSCM
+            node / gitConfigName('DSL User')
+            node / gitConfigEmail('jenkins-dsl@newtech.academy')
+        }
+    }
+    triggers {
+        scm('H/5 * * * *')
+    }
+    wrappers {
+        nodejs('nodejs') // this is the name of the NodeJS installation in 
+                         // Manage Jenkins -> Configure Tools -> NodeJS Installations -> Name
+    }
+    steps {
+        dockerBuildAndPublish {
+            repositoryName('devrath98/nodejs-docker-using-dsl-groovy-scripting')
+            tag('${GIT_REVISION,length=9}') #we are going to tag the pushed docker image if we leave this empty it will be latest , but we are going to tag it with a GIT_REVISION , which is a unique id, a unique SHA that git has for every commit. So for every change you made in your git repository which is a commit you will have a unique SHA and this unique string we are going to use to tag our image, so that every image can be tracked back to the version control. So, if we then a specific version with a certain tag, we know exactly what version it is. We can go back to version Control, Type in this commit ID, and we can find the exact code that this deploys.
+            registryCredentials('dockerhub') #dockerhub is the id for dockerhub credentials
+#Following are some flags and their meaning is defined in website-> http://jenkinsci.github.io/job-dsl-plugin/ Her you can find the job DSL API documentation.Search docker in filter and you will see dockerBuildAndPublish
+            forcePull(false) #if set to true it will mean that if set make sure you do a pull of this Node.js image to have the latest version before you start building it Can be very useful if you take for example ,on a specific major version on Node.js , you wanna make sure that you have the latest version of that major version. Like your major version is 7 so you have to make sure you have the latest version of 7 and not the older version but here false so this process does not takes place
+            forceTag(false)
+            createFingerprints(false)
+            skipDecorate()
+        }
+    }
+}
+
