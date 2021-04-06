@@ -127,4 +127,51 @@ job('NodeJS Docker using DSL groovy scripting') { #This will create another job 
 
 PIPELINE FOLDER 6 Tuts 
 video 4 DEMO JENKINS pipeline with nodeJs an docker
+Jenkins pipeline with nodeJS example , with docker
+What is the idea of this jenkins pipeline-The idea is that we only have one repository with our project. And in this project we have the pipeline file
+, often called Jenkins file.
+And that Jenkins file will then have the steps, the pipeline steps to build this project in Jenkins.
+So , then you only need one project , one git repository, That will have the code of your project and also the code to build your project.
+So, this is what we want to build the nodeJS project with docker.
 
+To check the code go to docker-demo repository
+Inside it is the DOCKERfile 
+
+Dockerfile code EXPLAINATION
+#This is our node base image  that we want to build together with this application and then we want to start it
+FROM node:12 
+WORKDIR /app
+ADD . /app
+RUN npm install
+EXPOSE 3000
+CMD npm start
+
+Typically you put the jenkinsfile in root of your project but you can also put it somewher else
+FOR this purpose I have put it here in misc folder 
+got to misc->open Jenkinsfile inside docer-demo repository
+
+Following is the code of Jenkinsfile which is necessary to build our nodeJS project and that is going to package it in docker and publish it to docker hub.
+JSNKINSFILE code EXPLAINATION
+#we are going to have three stages
+1)Preparation stage
+2)Test stage
+3)A stage that's called docker build and push. docker build and push can be two separate stage but we have put them together here
+node {#This means this project can be built in any node
+   def commit_id #We will have a variable commit_id We have to figure it out because doesn't expose it by default in jenkins pipelines. 
+   stage('Preparation') { #let's go over what we are going to do in preparation stage
+     checkout scm # first this command is going to do a git clone of this docker demo in jenkins. So then we have all the files available and we can start building our project  SO, now that we have the current repository available we are going to run the following command using a shell
+     sh "git rev-parse --short HEAD > .git/commit-id" #This is going to give us the commit_id. and this commit_id using > sign in above command is going to put in a file  .git/commit-id . which is just a temporary file where we're going to store this commit ID. It's the SHA , it's a unique ID. WE are going to use it later on to tag our image. Just as we did earlier in previous docker build                       
+     commit_id = readFile('.git/commit-id').trim() #This is going to save in this commit_id whatever is there in  .git/commit-id after reading it and trimming it for any spaces so that it's just a string characters of this commit ID.
+   }
+   stage('test') { #In this stage we are going to run NPM install only in the development packages. And npm test
+     nodejs(nodeJSInstallationName: 'nodejs') { #To make sure that we can run NPM we're going to represent this nodeJS.So we are going to say that nodeJS installation name is nodeJS. We have a global tool in our Jenkins nodejs which is installed.Only when using this nodejs we can use the NPM commands. Otherwise it will say NPM not found
+       sh 'npm install --only=dev' #install ONLY the development packages which is going to be mocha check it inside package.json. So we are going to install MOCHA first and that is what is going to be needed to test our package.
+       sh 'npm test' # this will run the executable MOCHA which is then going to execute test.js script inside test folder.Inside it is an example script which will always succeed, but typically what you put here is a test that will test your code.
+     }
+   }
+   stage('docker build/push') { #
+     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {#We want to do something in the docker with a registry-> standard registry index.docker.io refers to the dockerhub which is the host of the registry and we are login with the credentials with id dockerhub in our jenkins
+       def app = docker.build("devrath98/docker-nodejs-demo-pipeline-intro-demo:${commit_id}", '.').push() #build my docker application and I want to tag it with a name my name-devrath98 and my repository->docker-nodejs-demo-pipeline-intro-demo and then the commit ID and I use "." dot because i wanna build the current path . That's where our dockerfile is.Amd after the build is done i wanna push this. It's going to build ->EXECUTE the Dockerfile in root directory of our project->which will build the docker image based on the codes written in Dockerfile, and it's gonna have image and that image is gonnathen be pushed to this registry using this credential. Then our Job is finished.
+     }
+   }
+}
