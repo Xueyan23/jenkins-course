@@ -215,12 +215,12 @@ node {
      def mysql = docker.image('mysql').run("-e MYSQL_ALLOW_EMPTY_PASSWORD=yes --rm") # mysql equals docker image MYSQL. I don't use a tag her as done above for node image which defaults to it will be latest version Mysql image. Then we are going to run this container and will specify an environment variable. MYSQL ALLOW EMPTY password = YES So, ther's no password protection on this MYSQL and this container can be removed --rm after it has been used
      def myTestContainer = docker.image('node:4.6') 
      myTestContainer.pull()
-     myTestContainer.inside("--link ${mysql.id}:mysql") { // using linking, mysql will be available at host: mysql, port: 3306 ##Here we pass a parameter which means link this node.js container with this MYSQL container.${mysql.id}:mysql SO these are going to use MYSQL iD and make them tis available as mysql.So we can use node to connect to mysql and put host MYSQL and then you can connect to your MYSQL whenever you are running and executing your tests. Once this stage is finished the container will be thrown away
+     myTestContainer.inside("--link ${mysql.id}:mysql") { // using linking, mysql will be available at host: mysql (hostname is mysql so that you can access it at port 3306 using mysql host), port: 3306 ##Here we pass a parameter which means link this node.js container with this MYSQL container.${mysql.id}:mysql SO these are going to use MYSQL iD and make them tis available as mysql.So we can use node to connect to mysql and put host MYSQL and then you can connect to your MYSQL whenever you are running and executing your tests. Once this stage is finished the container will be thrown away
 #Same two commands are run as previous test stage but I also want next to my node container is also NYSQL container
           sh 'npm install --only=dev' 
           sh 'npm test'                     
      }                                   
-     mysql.stop()
+     mysql.stop() #This will automatically remove mysql container so no need to use --rm
    }                                     
    stage('docker build/push') {            
      docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
@@ -234,3 +234,5 @@ node {
 3)Save
 4)Build
 5)DONE
+
+THIS shows you how you can easily within jenkins pipeline so you can easily use any third-party tool, You can bring in any container with the tools with the dependencies and binaries that you want.
