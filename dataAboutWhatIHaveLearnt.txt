@@ -124,3 +124,7 @@ job('NodeJS Docker using DSL groovy scripting') { #This will create another job 
     }
 }
 
+
+PIPELINE FOLDER 6 Tuts 
+video 4 DEMO JENKINS pipeline with nodeJs an docker
+
