@@ -66,4 +66,4 @@ TUTORIAL Folder-5 Jenkins To DSL Demos for building jenkins job using DSL
 8)GO to manage jenkins->In-process Script Approval
 9)Approve the incoming script to tell the jenkins that you trust the incoming script from given repository
 10)Now Build the seed project again Its SUCCESS
-
+11)Now run the new build project
