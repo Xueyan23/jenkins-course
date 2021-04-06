@@ -67,3 +67,14 @@ TUTORIAL Folder-5 Jenkins To DSL Demos for building jenkins job using DSL
 9)Approve the incoming script to tell the jenkins that you trust the incoming script from given repository
 10)Now Build the seed project again Its SUCCESS
 11)Now run the new build project
+
+TUTORIAL Folder-5 Jenkins To DSL Demos for building jenkins job using DSL and publish in Docker
+1)GO to Jenkins Dashboard->create freestyle project named as NodeJS Docker using DSL groovy scripting
+2)Source Code Management->Now enter the url for jenkins-course repository
+3)In Build section->Select Process Job DSLs->Look on Filesystem
+4)Inside DSL Scripts-> job-dsl/nodejsdocker.groovy is the refernce or file location wher DSL code script is written in git repository
+5)Save
+6)Run on first build will fail as DSL script needs approval
+7)GO to manage jenkins->In-process Script Approval
+8)Approve the incoming script to tell the jenkins that you trust the incoming script from given repository
+9)Now Build the project again And it Success And the project is also published in docker
