@@ -175,3 +175,12 @@ node {#This means this project can be built in any node
      }
    }
 }
+
+1)Go to Dashboard->manage jenkins->manage plugin->available->search docker->Docker Pipeline ->select and install
+2)create new job name -> docker nodejs demo pipeline intro demo
+type-> pipeline 
+3)Ideally you should avoid it you should have job dsl which automatically crates it or you have another meethod which will run automatically, otherwise for every product that you have you have to  manually input it still in Jenkins UI like we will do her.If you have a lot of jobs, lot of projects, lot of repositories then automation is bnecessary.
+4)Here only need one thing
+5)Under Pipeline section->select Pipeline script from SCM->SCM is git->  copy the url of docker-demo repository
+6)SCript path-> misc/Jenkinsfile
+7)Save-> Build Now
